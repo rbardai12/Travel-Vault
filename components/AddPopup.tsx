@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     StyleSheet,
     Text,
@@ -14,172 +14,94 @@ import { router } from "expo-router";
 import { useKTNStore, KTN } from "@/stores/ktn-store";
 import { CreditCard, Shield, X, Plus } from "lucide-react-native";
 import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import AddLoyaltyPopup from "./AddLoyaltyPopup";
 
 type AddPopupProps = {
     visible: boolean;
     onClose: () => void;
+    onAddKTN: () => void; // new prop
 };
 
-export default function AddPopup({ visible, onClose }: AddPopupProps) {
-    const { ktns, addKTN } = useKTNStore();
-    const [showKTNModal, setShowKTNModal] = useState(false);
-    const [ktnNumber, setKtnNumber] = useState("");
-    const [ktnNickname, setKtnNickname] = useState("");
+export default function AddPopup({ visible, onClose, onAddKTN }: AddPopupProps) {
+    const { ktns } = useKTNStore();
+    const [showAddLoyalty, setShowAddLoyalty] = useState(false);
 
     const handleAddLoyalty = () => {
-        onClose();
-        router.push("/add-loyalty");
+        setShowAddLoyalty(true);
     };
 
     const handleAddKTN = () => {
-        setShowKTNModal(true);
+        onClose();
+        setTimeout(() => {
+            onAddKTN();
+        }, 300); // Wait for popup to close before opening KTN modal
     };
 
-    const handleSaveKTN = () => {
-        if (ktnNumber.trim() && ktnNickname.trim()) {
-            const newKTN: KTN = {
-                id: Date.now().toString(),
-                number: ktnNumber.trim(),
-                nickname: ktnNickname.trim(),
-            };
-            addKTN(newKTN);
-            setKtnNumber("");
-            setKtnNickname("");
-            setShowKTNModal(false);
-            onClose();
-        }
+    const handleCloseAddLoyalty = () => {
+        setShowAddLoyalty(false);
+        onClose();
     };
 
     const AnimatedView = Platform.OS === 'web' ? View : Animated.View;
 
     return (
-        <Modal
-            visible={visible}
-            transparent
-            animationType="fade"
-            onRequestClose={onClose}
-        >
-            <View style={styles.overlay}>
-                <TouchableOpacity style={styles.backdrop} onPress={onClose} />
+        <>
+            <Modal
+                visible={visible && !showAddLoyalty}
+                transparent
+                animationType="fade"
+                onRequestClose={onClose}
+            >
+                <View style={styles.overlay}>
+                    <TouchableOpacity style={styles.backdrop} onPress={onClose} />
 
-                <AnimatedView
-                    entering={Platform.OS !== 'web' ? SlideInDown.duration(300) : undefined}
-                    style={styles.popup}
-                >
-                    <View style={styles.popupHeader}>
-                        <Text style={styles.popupTitle}>Add to Your Vault</Text>
-                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <X size={20} color="#fff" />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.optionsContainer}>
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={handleAddLoyalty}
-                        >
-                            <View style={styles.optionIcon}>
-                                <CreditCard size={24} color="#6366f1" />
-                            </View>
-                            <View style={styles.optionContent}>
-                                <Text style={styles.optionTitle}>Loyalty Program</Text>
-                                <Text style={styles.optionDescription}>Add airline or hotel</Text>
-                            </View>
-                            <Plus size={16} color="#666" />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={handleAddKTN}
-                        >
-                            <View style={styles.optionIcon}>
-                                <Shield size={24} color="#6366f1" />
-                            </View>
-                            <View style={styles.optionContent}>
-                                <Text style={styles.optionTitle}>Known Traveler Number</Text>
-                                <Text style={styles.optionDescription}>
-                                    {ktns.length > 0 ? `${ktns.length} KTN${ktns.length > 1 ? 's' : ''} added` : 'Add KTN for faster check-in'}
-                                </Text>
-                            </View>
-                            <Plus size={16} color="#666" />
-                        </TouchableOpacity>
-                    </View>
-                </AnimatedView>
-
-                {/* KTN Modal */}
-                <Modal
-                    visible={showKTNModal}
-                    transparent
-                    animationType="fade"
-                >
-                    <View style={styles.ktnModalContainer}>
-                        <TouchableOpacity
-                            style={styles.ktnModalBackdrop}
-                            onPress={() => setShowKTNModal(false)}
-                        />
-                        <View style={styles.ktnModal}>
-                            <View style={styles.ktnModalHeader}>
-                                <Text style={styles.ktnModalTitle}>Add KTN</Text>
-                                <TouchableOpacity
-                                    onPress={() => setShowKTNModal(false)}
-                                    style={styles.ktnModalCloseButton}
-                                >
-                                    <X size={20} color="#fff" />
-                                </TouchableOpacity>
-                            </View>
-
-                            <ScrollView style={styles.ktnModalContent}>
-                                <Text style={styles.ktnModalLabel}>Nickname</Text>
-                                <TextInput
-                                    style={styles.ktnModalInput}
-                                    placeholder="e.g., Mom, Dad, John"
-                                    placeholderTextColor="#666"
-                                    value={ktnNickname}
-                                    onChangeText={setKtnNickname}
-                                    autoCapitalize="words"
-                                />
-
-                                <Text style={styles.ktnModalLabel}>Known Traveler Number</Text>
-                                <TextInput
-                                    style={styles.ktnModalInput}
-                                    placeholder="Enter KTN"
-                                    placeholderTextColor="#666"
-                                    value={ktnNumber}
-                                    onChangeText={setKtnNumber}
-                                    autoCapitalize="characters"
-                                    autoCorrect={false}
-                                />
-
-                                <Text style={styles.ktnModalDescription}>
-                                    Your Known Traveler Number (KTN) is used for TSA PreCheck and Global Entry.
-                                    It's the same number for all airlines.
-                                </Text>
-
-                                <View style={styles.ktnModalButtons}>
-                                    <TouchableOpacity
-                                        style={styles.ktnModalCancelButton}
-                                        onPress={() => setShowKTNModal(false)}
-                                    >
-                                        <Text style={styles.ktnModalCancelText}>Cancel</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.ktnModalSaveButton,
-                                            (!ktnNumber.trim() || !ktnNickname.trim()) && styles.ktnModalSaveButtonDisabled
-                                        ]}
-                                        onPress={handleSaveKTN}
-                                        disabled={!ktnNumber.trim() || !ktnNickname.trim()}
-                                    >
-                                        <Text style={styles.ktnModalSaveText}>Save</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </ScrollView>
+                    <AnimatedView
+                        entering={Platform.OS !== 'web' ? SlideInDown.duration(300) : undefined}
+                        style={styles.popup}
+                    >
+                        <View style={styles.popupHeader}>
+                            <Text style={styles.popupTitle}>Add to Your Vault</Text>
+                            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                                <X size={20} color="#fff" />
+                            </TouchableOpacity>
                         </View>
-                    </View>
-                </Modal>
-            </View>
-        </Modal>
+
+                        <View style={styles.optionsContainer}>
+                            <TouchableOpacity
+                                style={styles.option}
+                                onPress={handleAddLoyalty}
+                            >
+                                <View style={styles.optionIcon}>
+                                    <CreditCard size={24} color="#6366f1" />
+                                </View>
+                                <View style={styles.optionContent}>
+                                    <Text style={styles.optionTitle}>Loyalty Program</Text>
+                                    <Text style={styles.optionDescription}>Add airline or hotel</Text>
+                                </View>
+                                <Plus size={16} color="#666" />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.option}
+                                onPress={handleAddKTN}
+                            >
+                                <View style={styles.optionIcon}>
+                                    <Shield size={24} color="#6366f1" />
+                                </View>
+                                <View style={styles.optionContent}>
+                                    <Text style={styles.optionTitle}>Known Traveler Number</Text>
+                                    <Text style={styles.optionDescription}>
+                                        {ktns.length > 0 ? `${ktns.length} KTN${ktns.length > 1 ? 's' : ''} added` : 'Add KTN for faster check-in'}
+                                    </Text>
+                                </View>
+                                <Plus size={16} color="#666" />
+                            </TouchableOpacity>
+                        </View>
+                    </AnimatedView>
+                </View>
+            </Modal>
+            <AddLoyaltyPopup visible={showAddLoyalty} onClose={handleCloseAddLoyalty} />
+        </>
     );
 }
 
@@ -256,27 +178,27 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#aaa",
     },
-      ktnModalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  ktnModalBackdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  ktnModal: {
-    backgroundColor: "#1a1a1a",
-    borderRadius: 20,
-    width: "100%",
-    maxHeight: "80%",
-    maxWidth: 400,
-  },
+    ktnModalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    ktnModalBackdrop: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    ktnModal: {
+        backgroundColor: "#1a1a1a",
+        borderRadius: 20,
+        width: "100%",
+        maxHeight: "80%",
+        maxWidth: 400,
+    },
     ktnModalHeader: {
         flexDirection: "row",
         justifyContent: "space-between",

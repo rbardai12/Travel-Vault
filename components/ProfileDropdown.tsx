@@ -9,11 +9,12 @@ import {
   Platform
 } from "react-native";
 import { BlurView } from "expo-blur";
-import { User, Moon, Sun, LogOut, Check, X } from "lucide-react-native";
+import { User, Moon, Sun, LogOut, Check, X, Lock, Database } from "lucide-react-native";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutUp } from "react-native-reanimated";
 import { router } from "expo-router";
+import { StorageDebug } from "@/utils/storage-debug";
 
 type ProfileDropdownProps = {
   visible: boolean;
@@ -33,6 +34,12 @@ export default function ProfileDropdown({ visible, onClose, anchorPosition }: Pr
 
   const handleDarkModeToggle = () => {
     toggleDarkMode();
+  };
+
+  const handleViewStoredData = async () => {
+    console.log('🔍 Viewing stored data...');
+    await StorageDebug.viewAllData();
+    onClose();
   };
 
   const AnimatedView = Platform.OS === 'web' ? View : Animated.View;
@@ -65,32 +72,50 @@ export default function ProfileDropdown({ visible, onClose, anchorPosition }: Pr
               </View>
               <View style={styles.userDetails}>
                 <Text style={styles.userName}>{user?.name || "Traveler"}</Text>
-                <Text style={styles.userEmail}>{user?.email || "traveler@example.com"}</Text>
+                <Text style={styles.userEmail}>
+                  {user?.email ?
+                    (user.isPrivateEmail ? `${user.email} (Private)` : user.email) :
+                    "Signed in with Apple"
+                  }
+                </Text>
               </View>
             </View>
 
             <View style={styles.separator} />
 
+            {/* Theme selection */}
+            <View style={{ marginBottom: 8 }}>
+              <Text style={{ color: '#fff', fontWeight: '600', marginBottom: 8 }}>Theme</Text>
+              <TouchableOpacity
+                style={[styles.menuItem, { backgroundColor: '#6366f1' }]}
+                disabled={true}
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.menuItemIcon}>
+                    <Moon size={20} color={'#fff'} />
+                  </View>
+                  <View style={styles.menuItemContent}>
+                    <Text style={[styles.menuItemTitle, { color: '#fff' }]}>Dark Mode</Text>
+                    <Text style={[styles.menuItemDescription, { color: '#e0e7ff' }]}>Easy on the eyes</Text>
+                  </View>
+                </View>
+                <Lock size={16} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={handleDarkModeToggle}
+              onPress={handleViewStoredData}
             >
               <View style={styles.menuItemLeft}>
                 <View style={styles.menuItemIcon}>
-                  {isDarkMode ? (
-                    <Moon size={20} color="#6366f1" />
-                  ) : (
-                    <Sun size={20} color="#6366f1" />
-                  )}
+                  <Database size={20} color="#6366f1" />
                 </View>
                 <View style={styles.menuItemContent}>
-                  <Text style={styles.menuItemTitle}>Dark Mode</Text>
-                  <Text style={styles.menuItemDescription}>
-                    {isDarkMode ? "Currently enabled" : "Switch to dark theme"}
-                  </Text>
+                  <Text style={styles.menuItemTitle}>View Stored Data</Text>
+                  <Text style={styles.menuItemDescription}>Check console for data</Text>
                 </View>
               </View>
-              {isDarkMode && <Check size={16} color="#6366f1" />}
             </TouchableOpacity>
 
             <TouchableOpacity

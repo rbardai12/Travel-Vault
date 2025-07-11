@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator
 } from "react-native";
+import HapticTouchable from "@/components/HapticTouchable";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Send, User } from "lucide-react-native";
 import ChatMessage from "@/components/ChatMessage";
@@ -60,12 +61,13 @@ export default function AssistantScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Good morning, {user?.name || "Traveler"}</Text>
-          <TouchableOpacity
+          <HapticTouchable
             style={styles.profileButton}
             onPress={handleProfilePress}
+            hapticType="light"
           >
             <User size={24} color="#fff" />
-          </TouchableOpacity>
+          </HapticTouchable>
         </View>
 
         {messages.length === 0 ? (
@@ -76,24 +78,27 @@ export default function AssistantScreen() {
               packing tips, or destination details.
             </Text>
             <View style={styles.suggestionsContainer}>
-              <TouchableOpacity
+              <HapticTouchable
                 style={styles.suggestionButton}
                 onPress={() => setInput("What should I pack for a beach vacation?")}
+                hapticType="light"
               >
                 <Text style={styles.suggestionText}>Packing for beach</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </HapticTouchable>
+              <HapticTouchable
                 style={styles.suggestionButton}
                 onPress={() => setInput("Best time to visit Japan?")}
+                hapticType="light"
               >
                 <Text style={styles.suggestionText}>Best time for Japan</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </HapticTouchable>
+              <HapticTouchable
                 style={styles.suggestionButton}
                 onPress={() => setInput("Tips for long-haul flights")}
+                hapticType="light"
               >
                 <Text style={styles.suggestionText}>Long flight tips</Text>
-              </TouchableOpacity>
+              </HapticTouchable>
             </View>
           </View>
         ) : (
@@ -122,20 +127,21 @@ export default function AssistantScreen() {
             onSubmitEditing={handleSend}
             editable={!isLoading}
           />
-          <TouchableOpacity
+          <HapticTouchable
             style={[
               styles.sendButton,
               (input.trim() === "" || isLoading) && styles.sendButtonDisabled
             ]}
             onPress={handleSend}
             disabled={input.trim() === "" || isLoading}
+            hapticType="medium"
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Send size={20} color="#fff" />
             )}
-          </TouchableOpacity>
+          </HapticTouchable>
         </View>
 
         <ProfileDropdown

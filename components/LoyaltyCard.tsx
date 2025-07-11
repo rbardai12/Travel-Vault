@@ -1,16 +1,37 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image, Platform } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Edit2 } from "lucide-react-native";
 import { LoyaltyProgram } from "@/types/loyalty";
+import * as Clipboard from 'expo-clipboard';
+import Toast from 'react-native-toast-message';
+import { Swipeable } from 'react-native-gesture-handler';
+import { Trash2 } from 'lucide-react-native';
+import HapticTouchable from "@/components/HapticTouchable";
 
 type LoyaltyCardProps = {
   program: LoyaltyProgram;
+  onDelete?: (program: LoyaltyProgram) => void;
 };
 
-export default function LoyaltyCard({ program }: LoyaltyCardProps) {
+export default function LoyaltyCard({ program, onEdit, onDelete }: LoyaltyCardProps & { onEdit?: (program: LoyaltyProgram) => void, onDelete?: (program: LoyaltyProgram) => void }) {
   const handleEdit = () => {
-    router.push(`/edit-loyalty/${program.id}`);
+    if (onEdit) {
+      onEdit(program);
+    }
+  };
+
+  const handleCopy = () => {
+    if (program.memberNumber) {
+      Clipboard.setStringAsync(program.memberNumber);
+      Toast.show({
+        type: 'success',
+        text1: 'Membership number copied!',
+        position: 'top',
+        topOffset: 60,
+        visibilityTime: 1200,
+      });
+    }
   };
 
   // Generate gradient colors based on airline name for visual variety
@@ -18,53 +39,70 @@ export default function LoyaltyCard({ program }: LoyaltyCardProps) {
     const hash = name.split('').reduce((acc, char) => {
       return char.charCodeAt(0) + ((acc << 5) - acc);
     }, 0);
-    
+
     // Use the hash to generate a hue between 200 and 260 (blues/purples)
     const hue = Math.abs(hash % 60) + 200;
-    
+
     return [
       `hsl(${hue}, 70%, 20%)`,
       `hsl(${hue}, 70%, 30%)`,
     ];
   };
 
+  const renderRightActions = () => (
+    <HapticTouchable
+      style={styles.deleteAction}
+      onPress={() => onDelete && onDelete(program)}
+      activeOpacity={0.8}
+      hapticType="error"
+    >
+      <Trash2 size={28} color="#fff" />
+    </HapticTouchable>
+  );
+
   return (
-    <TouchableOpacity onPress={handleEdit} activeOpacity={0.9}>
-      <LinearGradient
-        colors={getGradientColors(program.airlineName)}
-        style={styles.card}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+    <Swipeable renderRightActions={renderRightActions}>
+      <HapticTouchable
+        activeOpacity={0.9}
+        onLongPress={handleCopy}
+        hapticType="light"
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.airlineInfo}>
-            <Image 
-              source={{ uri: program.airlineLogo }} 
-              style={styles.airlineLogo} 
-              resizeMode="contain"
-            />
-            <Text style={styles.airlineName}>{program.airlineName}</Text>
-          </View>
-          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-            <Edit2 size={16} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.cardContent}>
-          <View style={styles.numberContainer}>
-            <Text style={styles.numberLabel}>Membership Number</Text>
-            <Text style={styles.numberValue}>{program.memberNumber}</Text>
-          </View>
-          
-          {program.knownTravelerNumber && (
-            <View style={styles.numberContainer}>
-              <Text style={styles.numberLabel}>Known Traveler Number</Text>
-              <Text style={styles.numberValue}>{program.knownTravelerNumber}</Text>
+        <LinearGradient
+          colors={getGradientColors(program.airlineName)}
+          style={styles.card}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.airlineInfo}>
+              <Image
+                source={typeof program.airlineLogo === 'string' ? { uri: program.airlineLogo } : program.airlineLogo}
+                style={styles.airlineLogo}
+                resizeMode="contain"
+              />
+              <Text style={styles.airlineName}>{program.airlineName}</Text>
             </View>
-          )}
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+            <HapticTouchable style={styles.editButton} onPress={handleEdit} hapticType="light">
+              <Edit2 size={16} color="#fff" />
+            </HapticTouchable>
+          </View>
+
+          <View style={styles.cardContent}>
+            <View style={styles.numberContainer}>
+              <Text style={styles.numberLabel}>Membership Number</Text>
+              <Text style={styles.numberValue}>{program.memberNumber}</Text>
+            </View>
+
+            {program.knownTravelerNumber && (
+              <View style={styles.numberContainer}>
+                <Text style={styles.numberLabel}>Known Traveler Number</Text>
+                <Text style={styles.numberValue}>{program.knownTravelerNumber}</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+      </HapticTouchable>
+    </Swipeable>
   );
 }
 
@@ -92,7 +130,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   airlineName: {
     marginLeft: 12,
@@ -123,5 +160,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
     letterSpacing: 1,
+  },
+  deleteAction: {
+    backgroundColor: '#ef4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 72,
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+    marginVertical: 8,
   },
 });

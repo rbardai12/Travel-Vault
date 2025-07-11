@@ -1,22 +1,27 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, FlatList, Platform, TouchableOpacity } from "react-native";
+import HapticTouchable from "@/components/HapticTouchable";
 import { useLoyaltyStore } from "@/stores/loyalty-store";
 import { useAuthStore } from "@/stores/auth-store";
 import LoyaltyCard from "@/components/LoyaltyCard";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import Animated, { FadeInUp, FadeOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EmptyState from "@/components/EmptyState";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import KTNWidget from "@/components/KTNWidget";
 import { router } from "expo-router";
 import { User } from "lucide-react-native";
+import EditLoyaltyScreen from "../edit-loyalty/[id]";
+import AddLoyaltyPopup from "@/components/AddLoyaltyPopup";
 
 export default function LoyaltyProgramsScreen() {
-  const { programs, loadPrograms } = useLoyaltyStore();
+  const { programs, loadPrograms, deleteProgram } = useLoyaltyStore();
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [profileIconPosition, setProfileIconPosition] = useState({ x: 0, y: 0 });
+  const [editingProgram, setEditingProgram] = useState(null);
+  const [showAddLoyalty, setShowAddLoyalty] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -28,7 +33,15 @@ export default function LoyaltyProgramsScreen() {
   }, []);
 
   const handleAddProgram = () => {
-    router.push("/add-loyalty");
+    setShowAddLoyalty(true);
+  };
+
+  const handleEditProgram = (program) => {
+    setEditingProgram(program);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingProgram(null);
   };
 
   const handleProfilePress = (event: any) => {
@@ -43,16 +56,16 @@ export default function LoyaltyProgramsScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Your Vault</Text>
-        <TouchableOpacity
+        <HapticTouchable
           style={styles.profileButton}
           onPress={handleProfilePress}
+          hapticType="light"
         >
           <User size={24} color="#fff" />
-        </TouchableOpacity>
+        </HapticTouchable>
       </View>
 
       <KTNWidget />
-      
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading your programs...</Text>
@@ -72,12 +85,17 @@ export default function LoyaltyProgramsScreen() {
           renderItem={({ item, index }) => (
             <AnimatedView
               entering={Platform.OS !== 'web' ? FadeInUp.delay(100 * index).duration(500) : undefined}
+              exiting={Platform.OS !== 'web' ? FadeOutRight.duration(350) : undefined}
               style={styles.cardContainer}
             >
-              <LoyaltyCard program={item} />
+              <LoyaltyCard program={item} onEdit={handleEditProgram} onDelete={() => deleteProgram(item.id)} />
             </AnimatedView>
           )}
         />
+      )}
+
+      {editingProgram && (
+        <EditLoyaltyScreen program={editingProgram} onClose={handleCloseEditModal} />
       )}
 
       <ProfileDropdown
@@ -85,6 +103,7 @@ export default function LoyaltyProgramsScreen() {
         onClose={() => setShowProfileDropdown(false)}
         anchorPosition={profileIconPosition}
       />
+      <AddLoyaltyPopup visible={showAddLoyalty} onClose={() => setShowAddLoyalty(false)} />
     </SafeAreaView>
   );
 }

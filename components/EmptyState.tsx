@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { Plane } from "lucide-react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Platform } from "react-native";
+import HapticTouchable from "@/components/HapticTouchable";
 
 type EmptyStateProps = {
   title: string;
@@ -28,9 +29,9 @@ export default function EmptyState({
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
-      <TouchableOpacity style={styles.button} onPress={onPress}>
+      <HapticTouchable style={styles.button} onPress={onPress} hapticType="medium">
         <Text style={styles.buttonText}>{buttonText}</Text>
-      </TouchableOpacity>
+      </HapticTouchable>
     </AnimatedView>
   );
 }

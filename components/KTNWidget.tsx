@@ -10,9 +10,13 @@ import {
     KeyboardAvoidingView,
     Platform
 } from "react-native";
+import HapticTouchable from "@/components/HapticTouchable";
 import { useKTNStore, KTN } from "@/stores/ktn-store";
-import { Shield, X, Edit2, Trash2, Plus } from "lucide-react-native";
+import { Shield, X, Edit2, Plus } from "lucide-react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
+import { BlurView } from "expo-blur";
+import * as Clipboard from 'expo-clipboard';
+import Toast from 'react-native-toast-message';
 
 export default function KTNWidget() {
     const { ktns, updateKTN, deleteKTN } = useKTNStore();
@@ -40,8 +44,12 @@ export default function KTNWidget() {
         }
     };
 
-    const handleDelete = (ktn: KTN) => {
-        deleteKTN(ktn.id);
+    const handleDelete = () => {
+        if (editingKTN) {
+            deleteKTN(editingKTN.id);
+            setEditModalVisible(false);
+            setEditingKTN(null);
+        }
     };
 
     const AnimatedView = Platform.OS === 'web' ? View : Animated.View;
@@ -74,45 +82,69 @@ export default function KTNWidget() {
                         <View style={styles.ktnHeader}>
                             <Text style={styles.ktnNickname}>{ktn.nickname}</Text>
                             <View style={styles.ktnActions}>
-                                <TouchableOpacity
+                                <HapticTouchable
                                     style={styles.actionButton}
                                     onPress={() => handleEdit(ktn)}
+                                    hapticType="light"
                                 >
                                     <Edit2 size={14} color="#666" />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.actionButton}
-                                    onPress={() => handleDelete(ktn)}
-                                >
-                                    <Trash2 size={14} color="#666" />
-                                </TouchableOpacity>
+                                </HapticTouchable>
                             </View>
                         </View>
-                        <Text style={styles.ktnNumber}>{ktn.number}</Text>
+                        <HapticTouchable
+                            activeOpacity={0.9}
+                            onLongPress={async () => {
+                                await Clipboard.setStringAsync(ktn.number);
+                                Toast.show({
+                                    type: 'success',
+                                    text1: 'KTN copied!',
+                                    position: 'top',
+                                    topOffset: 60,
+                                    visibilityTime: 1200,
+                                });
+                            }}
+                            hapticType="light"
+                        >
+                            <Text style={styles.ktnNumber}>{ktn.number}</Text>
+                        </HapticTouchable>
                     </AnimatedView>
                 ))}
             </ScrollView>
 
-                        {/* Edit Modal */}
-      <Modal
-        visible={editModalVisible}
-        transparent
-        animationType="fade"
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity 
-            style={styles.modalBackdrop} 
-            onPress={() => setEditModalVisible(false)}
-          />
-          <View style={styles.modal}>
+            {/* Edit Modal */}
+            <Modal
+                visible={editModalVisible}
+                transparent
+                animationType="fade"
+            >
+                <View style={styles.modalContainer}>
+                    <BlurView
+                        intensity={40}
+                        tint="dark"
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            zIndex: 0,
+                        }}
+                    />
+                    <HapticTouchable
+                        style={[styles.modalBackdrop, { zIndex: 1 }]}
+                        onPress={() => setEditModalVisible(false)}
+                        hapticType="light"
+                    />
+                    <View style={[styles.modal, { zIndex: 2 }]}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Edit KTN</Text>
-                            <TouchableOpacity
+                            <HapticTouchable
                                 onPress={() => setEditModalVisible(false)}
                                 style={styles.modalCloseButton}
+                                hapticType="light"
                             >
                                 <X size={20} color="#fff" />
-                            </TouchableOpacity>
+                            </HapticTouchable>
                         </View>
 
                         <View style={styles.modalContent}>
@@ -138,27 +170,28 @@ export default function KTNWidget() {
                             />
 
                             <View style={styles.modalButtons}>
-                                <TouchableOpacity
-                                    style={styles.modalCancelButton}
-                                    onPress={() => setEditModalVisible(false)}
-                                >
-                                    <Text style={styles.modalCancelText}>Cancel</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
+                                <HapticTouchable
                                     style={[
                                         styles.modalSaveButton,
                                         (!editNumber.trim() || !editNickname.trim()) && styles.modalSaveButtonDisabled
                                     ]}
                                     onPress={handleSaveEdit}
                                     disabled={!editNumber.trim() || !editNickname.trim()}
+                                    hapticType="success"
                                 >
                                     <Text style={styles.modalSaveText}>Save</Text>
-                                </TouchableOpacity>
+                                </HapticTouchable>
                             </View>
+                            <HapticTouchable
+                                style={styles.deleteButton}
+                                onPress={handleDelete}
+                                hapticType="error"
+                            >
+                                <Text style={styles.deleteButtonText}>Delete KTN</Text>
+                            </HapticTouchable>
                         </View>
                     </View>
-          </View>
+                </View>
             </Modal>
         </View>
     );
@@ -207,9 +240,10 @@ const styles = StyleSheet.create({
     ktnCard: {
         backgroundColor: "#2a2a2a",
         borderRadius: 16,
-        padding: 20,
-        marginRight: 16,
-        minWidth: 200,
+        padding: 12, // reduced from 20
+        marginRight: 12, // reduced from 16
+        minWidth: 150, // reduced from 200
+        maxWidth: 170, // add a maxWidth for consistency
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
@@ -220,10 +254,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 8,
+        marginBottom: 4, // reduced from 8
     },
     ktnNickname: {
-        fontSize: 16,
+        fontSize: 14, // reduced from 16
         fontWeight: "600",
         color: "#fff",
     },
@@ -240,34 +274,34 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     ktnNumber: {
-        fontSize: 14,
+        fontSize: 12, // reduced from 14
         fontWeight: "500",
         color: "#aaa",
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
         letterSpacing: 1,
-        marginTop: 8,
+        marginTop: 4, // reduced from 8
     },
-      modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  modalBackdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modal: {
-    backgroundColor: "#1a1a1a",
-    borderRadius: 20,
-    width: "100%",
-    maxHeight: "80%",
-    maxWidth: 400,
-  },
+    modalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    modalBackdrop: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modal: {
+        backgroundColor: "#1a1a1a",
+        borderRadius: 20,
+        width: "100%",
+        maxHeight: "80%",
+        maxWidth: 400,
+    },
     modalHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -338,5 +372,18 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "600",
+    },
+    deleteButton: {
+        backgroundColor: '#ef4444',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 16,
+    },
+    deleteButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 }); 
