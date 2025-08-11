@@ -74,10 +74,10 @@ class AuthService {
                 id: credential.user,
                 email: credential.email || undefined,
                 name: credential.fullName ? {
-                    firstName: credential.fullName.givenName,
-                    lastName: credential.fullName.familyName,
+                    firstName: credential.fullName.givenName || undefined,
+                    lastName: credential.fullName.familyName || undefined,
                 } : undefined,
-                isPrivateEmail: credential.email ? credential.isPrivateEmail : undefined,
+                isPrivateEmail: credential.email ? (credential as any).isPrivateEmail : undefined,
             };
 
             return {

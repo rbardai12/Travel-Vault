@@ -19,7 +19,7 @@ import { BlurView } from "expo-blur";
 
 export default function AddLoyaltyPopup({ visible, onClose }: { visible: boolean; onClose: () => void }) {
     const { addProgram } = useLoyaltyStore();
-    const { knownTravelerNumber } = useKTNStore();
+    const { ktns } = useKTNStore();
     const [selectedAirline, setSelectedAirline] = useState<any>(null);
     const [memberNumber, setMemberNumber] = useState("");
     const [searchQuery, setSearchQuery] = useState("");

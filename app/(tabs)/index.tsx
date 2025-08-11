@@ -36,7 +36,7 @@ export default function LoyaltyProgramsScreen() {
     setShowAddLoyalty(true);
   };
 
-  const handleEditProgram = (program) => {
+  const handleEditProgram = (program: any) => {
     setEditingProgram(program);
   };
 

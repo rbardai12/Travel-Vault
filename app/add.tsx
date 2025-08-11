@@ -16,9 +16,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInUp, FadeIn } from "react-native-reanimated";
 
 export default function AddScreen() {
-    const { knownTravelerNumber, setKTN, clearKTN } = useKTNStore();
+    const { ktns, addKTN, deleteKTN } = useKTNStore();
     const [showKTNModal, setShowKTNModal] = useState(false);
-    const [ktnInput, setKtnInput] = useState(knownTravelerNumber || "");
+    const [ktnInput, setKtnInput] = useState("");
 
     const handleAddLoyalty = () => {
         router.push("/add-loyalty");
@@ -30,9 +30,12 @@ export default function AddScreen() {
 
     const handleSaveKTN = () => {
         if (ktnInput.trim()) {
-            setKTN(ktnInput.trim());
-        } else {
-            clearKTN();
+            const newKTN = {
+                id: Date.now().toString(),
+                number: ktnInput.trim(),
+                nickname: "KTN"
+            };
+            addKTN(newKTN);
         }
         setShowKTNModal(false);
         router.back();
@@ -90,10 +93,10 @@ export default function AddScreen() {
                             </View>
                             <View style={styles.optionContent}>
                                 <Text style={styles.optionTitle}>
-                                    {knownTravelerNumber ? "Update KTN" : "Add KTN"}
+                                    {ktns.length > 0 ? "Update KTN" : "Add KTN"}
                                 </Text>
                                 <Text style={styles.optionDescription}>
-                                    {knownTravelerNumber
+                                    {ktns.length > 0
                                         ? "Update your Known Traveler Number"
                                         : "Add your Known Traveler Number for faster check-in"
                                     }
@@ -115,7 +118,7 @@ export default function AddScreen() {
                         >
                             <View style={styles.modalHeader}>
                                 <Text style={styles.modalTitle}>
-                                    {knownTravelerNumber ? "Update KTN" : "Add KTN"}
+                                    {ktns.length > 0 ? "Update KTN" : "Add KTN"}
                                 </Text>
                                 <TouchableOpacity
                                     style={styles.modalCloseButton}

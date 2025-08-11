@@ -25,7 +25,7 @@ type Airline = {
 
 export default function AddLoyaltyScreen() {
   const { addProgram } = useLoyaltyStore();
-  const { knownTravelerNumber } = useKTNStore();
+  const { ktns } = useKTNStore();
   const [selectedAirline, setSelectedAirline] = useState<Airline | null>(null);
   const [memberNumber, setMemberNumber] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -105,7 +105,7 @@ export default function AddLoyaltyScreen() {
               onChangeText={setMemberNumber}
             />
 
-            {knownTravelerNumber ? (
+            {ktns.length > 0 ? (
               <View style={styles.ktnInfo}>
                 <Text style={styles.ktnInfoText}>
                   ✓ KTN is set globally and will be used for all flights

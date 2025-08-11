@@ -93,12 +93,7 @@ export default function LoyaltyCard({ program, onEdit, onDelete }: LoyaltyCardPr
               <Text style={styles.numberValue}>{program.memberNumber}</Text>
             </View>
 
-            {program.knownTravelerNumber && (
-              <View style={styles.numberContainer}>
-                <Text style={styles.numberLabel}>Known Traveler Number</Text>
-                <Text style={styles.numberValue}>{program.knownTravelerNumber}</Text>
-              </View>
-            )}
+
           </View>
         </LinearGradient>
       </HapticTouchable>

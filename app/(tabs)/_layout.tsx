@@ -20,6 +20,10 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
   const { ktns, addKTN } = useKTNStore();
 
   const handleAddPress = () => {
+    // If we're on the assistant page, navigate to main page first
+    if (state.index === 1) {
+      navigation.navigate('index');
+    }
     setShowAddPopup(true);
   };
 
